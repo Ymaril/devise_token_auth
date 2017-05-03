@@ -105,10 +105,10 @@ module DeviseTokenAuth::Concerns::User
   end
 
 
-  def valid_token?(token, client_id='default')
+  def valid_token?(token, client_id='default', scope=nil)
     client_id ||= 'default'
 
-    return false unless self.tokens[client_id]
+    return false unless self.tokens[client_id] && self.tokens[client_id]['scope'] == scope
 
     return true if token_is_current?(token, client_id)
     return true if token_can_be_reused?(token, client_id)
@@ -164,7 +164,7 @@ module DeviseTokenAuth::Concerns::User
 
 
   # update user's auth token (should happen on each request)
-  def create_new_auth_token(client_id=nil)
+  def create_new_auth_token(client_id=nil, scope=nil)
     client_id  ||= SecureRandom.urlsafe_base64(nil, false)
     last_token ||= nil
     token        = SecureRandom.urlsafe_base64(nil, false)
@@ -179,7 +179,8 @@ module DeviseTokenAuth::Concerns::User
       token:      token_hash,
       expiry:     expiry,
       last_token: last_token,
-      updated_at: Time.now
+      updated_at: Time.now,
+      scope:      scope
     }
 
     max_clients = DeviseTokenAuth.max_number_of_devices

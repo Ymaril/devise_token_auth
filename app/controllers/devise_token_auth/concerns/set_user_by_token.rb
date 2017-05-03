@@ -37,7 +37,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
       if devise_warden_user && devise_warden_user.tokens[@client_id].nil?
         @used_auth_by_token = false
         @resource = devise_warden_user
-        @resource.create_new_auth_token
+        @resource.create_new_auth_token nil, devise_token_scope
       end
     end
 
@@ -55,7 +55,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
     # mitigate timing attacks by finding by uid instead of auth token
     user = uid && rc.find_by_uid(uid)
 
-    if user && user.valid_token?(@token, @client_id)
+    if user && user.valid_token?(@token, @client_id, devise_token_scope)
       sign_in(:user, user, store: false, bypass: true)
       return @resource = user
     else
@@ -98,7 +98,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
 
         # update Authorization response header with new token
         else
-          auth_header = @resource.create_new_auth_token(@client_id)
+          auth_header = @resource.create_new_auth_token(@client_id, devise_token_scope)
 
           # update the response header
           response.headers.merge!(auth_header)
@@ -118,6 +118,10 @@ module DeviseTokenAuth::Concerns::SetUserByToken
     end
 
     mapping.to
+  end
+
+  def devise_token_scope
+    nil
   end
 
 
