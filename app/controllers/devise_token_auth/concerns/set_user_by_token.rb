@@ -52,7 +52,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
         @resource = devise_warden_user
         # REVIEW: The following line _should_ be safe to remove;
         #  the generated token does not get used anywhere.
-        # @resource.create_new_auth_token
+        # @resource.create_new_auth_token nil, devise_token_scope
       end
     end
 
@@ -69,7 +69,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
     user = uid && rc.dta_find_by(uid: uid)
     scope = rc.to_s.underscore.to_sym
 
-    if user && user.valid_token?(@token.token, @token.client)
+    if user && user.valid_token?(@token.token, @token.client, devise_token_scope)
       # sign_in with bypass: true will be deprecated in the next version of Devise
       if respond_to?(:bypass_sign_in) && DeviseTokenAuth.bypass_sign_in
         bypass_sign_in(user, scope: scope)
@@ -155,8 +155,12 @@ module DeviseTokenAuth::Concerns::SetUserByToken
       auth_header[DeviseTokenAuth.headers_names[:"expiry"]] = ' '
     else
       # update Authorization response header with new token
-      auth_header = @resource.create_new_auth_token(@token.client)
+      auth_header = @resource.create_new_auth_token(@token.client, devise_token_scope)
     end
     auth_header
+  end
+
+  def devise_token_scope
+    nil
   end
 end

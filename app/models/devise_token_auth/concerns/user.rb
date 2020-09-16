@@ -103,8 +103,8 @@ module DeviseTokenAuth::Concerns::User
     end
   end
 
-  def valid_token?(token, client = 'default')
-    return false unless tokens[client]
+  def valid_token?(token, client = 'default', scope=nil)
+    return false unless tokens[client] && self.tokens[client_id]['scope'] == scope
     return true if token_is_current?(token, client)
     return true if token_can_be_reused?(token, client)
 
@@ -152,13 +152,14 @@ module DeviseTokenAuth::Concerns::User
   end
 
   # update user's auth token (should happen on each request)
-  def create_new_auth_token(client = nil)
+  def create_new_auth_token(client = nil, scope=nil)
     now = Time.zone.now
 
     token = create_token(
       client: client,
       last_token: tokens.fetch(client, {})['token'],
-      updated_at: now.to_s(:rfc822)
+      updated_at: now.to_s(:rfc822),
+      scope: scope
     )
 
     update_auth_header(token.token, token.client)
