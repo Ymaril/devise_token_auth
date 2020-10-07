@@ -13,14 +13,15 @@ module DeviseTokenAuth
     #
     #   DeviseTokenAuth::TokenFactory.create(lifespan: 10, cost: 4)
     #   => #<struct DeviseTokenAuth::TokenFactory::Token client="5qleT7_t9JPVcX9xmxkVYA", token="RBXX43u4xXNSO-fr2N_4pA", token_hash="$2a$04$9gpCaoFbu2dUKxU3qiTgluHX7jj9UzS.jq1QW0EkQmoaxARo1WxTy", expiry=1517773268>
-    def self.create(client: nil, lifespan: nil, cost: nil)
+    def self.create(client: nil, lifespan: nil, cost: nil, scope: nil)
       # obj_client  = client.nil? ? client() : client
       obj_client  = client || client()
       obj_token      = token
       obj_token_hash = token_hash(obj_token, cost)
       obj_expiry     = expiry(lifespan)
+      obj_scope      = scope
 
-      Token.new(obj_client, obj_token, obj_token_hash, obj_expiry)
+      Token.new(obj_client, obj_token, obj_token_hash, obj_expiry, obj_scope)
     end
 
     # Generates a random URL-safe client.
@@ -102,7 +103,7 @@ module DeviseTokenAuth
       Token.new
     end
 
-    Token = Struct.new(:client, :token, :token_hash, :expiry) do
+    Token = Struct.new(:client, :token, :token_hash, :expiry, :scope) do
       # Sets all instance variables of the token to nil. It is faster than creating new empty token.
       # Example:
       #   token.clear!

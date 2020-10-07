@@ -89,12 +89,18 @@ module DeviseTokenAuth::Concerns::User
       raw
     end
 
-    def create_token(client: nil, lifespan: nil, cost: nil, **token_extras)
-      token = DeviseTokenAuth::TokenFactory.create(client: client, lifespan: lifespan, cost: cost)
+    def create_token(client: nil, lifespan: nil, cost: nil, scope: nil, **token_extras)
+      token = DeviseTokenAuth::TokenFactory.create(
+          client: client,
+          lifespan: lifespan,
+          cost: cost,
+          scope: scope
+      )
 
       tokens[token.client] = {
         token:  token.token_hash,
-        expiry: token.expiry
+        expiry: token.expiry,
+        scope: scope
       }.merge!(token_extras)
 
       clean_old_tokens
@@ -104,7 +110,7 @@ module DeviseTokenAuth::Concerns::User
   end
 
   def valid_token?(token, client = 'default', scope=nil)
-    return false unless tokens[client] && self.tokens[client_id]['scope'] == scope
+    return false unless tokens[client] && self.tokens[client]['scope'] == scope
     return true if token_is_current?(token, client)
     return true if token_can_be_reused?(token, client)
 
